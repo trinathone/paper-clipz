@@ -211,12 +211,17 @@
 
     function closePanel() { panel.classList.remove('open'); }
 
-    btn.addEventListener('click', () =>
-      panel.classList.contains('open') ? closePanel() : openPanel()
-    );
-    closeBtn.addEventListener('click', closePanel);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      panel.classList.contains('open') ? closePanel() : openPanel();
+    });
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closePanel();
+    });
 
-    saveBtn.addEventListener('click', () => {
+    saveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       if (saveBtn.classList.contains('done')) return;
       const noteVal = noteEl.value.trim();
       if (!captured && !noteVal) { noteEl.focus(); return; }
@@ -239,9 +244,33 @@
       setTimeout(closePanel, 900);
     });
 
-    document.addEventListener('mousedown', (e) => {
-      if (!root.contains(e.target)) closePanel();
-    });
+    // Stop keyboard events (space, backspace, arrows) from reaching the page.
+    // Sites like YouTube and Perplexity intercept these and prevent textarea input.
+    for (const ev of ['keydown', 'keyup', 'keypress']) {
+      noteEl.addEventListener(ev, e => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      });
+    }
+
+    // Capture-phase: when panel is open, consume ALL outside clicks so the page
+    // never receives them. composedPath() is required for shadow DOM hit-testing.
+    document.addEventListener('mousedown', e => {
+      if (!panel.classList.contains('open')) return;
+      if (!e.composedPath().includes(root)) {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        closePanel();
+      }
+    }, true);
+
+    document.addEventListener('click', e => {
+      if (!panel.classList.contains('open')) return;
+      if (!e.composedPath().includes(root)) {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      }
+    }, true);
 
     // Re-inject if something removes the root (aggressive SPAs)
     const observer = new MutationObserver(() => {

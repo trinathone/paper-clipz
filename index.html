@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paper Clipz — Save what matters</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:   #1c1612;
+      --paper: #f4efe3;
+      --rule:  rgba(100, 80, 40, 0.07);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── Paper texture: grain + horizontal rules ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        repeating-linear-gradient(
+          transparent 0px, transparent 31px,
+          var(--rule) 31px, var(--rule) 32px
+        ),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23g)' opacity='0.09'/%3E%3C/svg%3E");
+    }
+
+    /* ── Layout ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Logo ── */
+    .logo {
+      position: fixed;
+      top: 28px;
+      left: 36px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      opacity: 0;
+      animation: fade-up 0.5s ease forwards 0.2s;
+    }
+
+    /* ── Scene ── */
+    .scene {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+    }
+
+    /* ── Character ── */
+    .char-wrap {
+      opacity: 0;
+      transform: translateY(36px);
+      animation: bounce-in 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 0.5s;
+    }
+
+    /* gentle float */
+    .char-group {
+      animation: float 4s ease-in-out infinite 1.5s;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-7px); }
+    }
+
+    /* blink */
+    .eyelid {
+      transform-origin: center;
+      animation: blink 5s ease-in-out infinite 2s;
+    }
+    @keyframes blink {
+      0%,42%,58%,100% { transform: scaleY(1); }
+      50%              { transform: scaleY(0.08); }
+    }
+
+    /* writing arm oscillation — class toggled by JS */
+    .arm-right {
+      transform-origin: 6px 4px;
+    }
+    .arm-right.idle {
+      animation: arm-idle 3s ease-in-out infinite;
+    }
+    .arm-right.writing {
+      animation: arm-write 0.42s ease-in-out infinite;
+    }
+    @keyframes arm-idle {
+      0%,100% { transform: rotate(0deg); }
+      50%     { transform: rotate(-6deg); }
+    }
+    @keyframes arm-write {
+      0%,100% { transform: rotate(-10deg) translateX(-4px); }
+      50%     { transform: rotate(10deg)  translateX(4px); }
+    }
+
+    /* ── Headline ── */
+    .headline {
+      text-align: center;
+      font-size: clamp(18px, 2.6vw, 30px);
+      font-weight: 400;
+      line-height: 1.85;
+      letter-spacing: -0.4px;
+      color: var(--ink);
+      min-height: 4em;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 0.85em;
+      background: var(--ink);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+      border-radius: 1px;
+      animation: blink-cur 0.65s step-end infinite;
+    }
+    @keyframes blink-cur {
+      0%,100% { opacity: 1; }
+      50%     { opacity: 0; }
+    }
+
+    /* ── CTA ── */
+    .cta {
+      display: inline-block;
+      padding: 12px 30px;
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+      text-decoration: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+      pointer-events: none;
+    }
+    .cta.show {
+      animation: fade-up 0.6s cubic-bezier(0.22,1,0.36,1) forwards;
+      pointer-events: auto;
+    }
+    .cta:hover {
+      transform: translateY(-3px) !important;
+      box-shadow: 0 10px 28px rgba(28,22,18,0.18);
+    }
+
+    /* ── Shared keyframes ── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounce-in {
+      from { opacity: 0; transform: translateY(36px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <span class="logo">📎 Paper Clipz</span>
+
+  <div class="scene">
+
+    <!-- ── Character ── -->
+    <div class="char-wrap">
+      <svg viewBox="0 0 160 200" width="148" height="185" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g class="char-group">
+
+          <!-- drop shadow -->
+          <ellipse cx="80" cy="196" rx="34" ry="4" fill="rgba(28,22,18,0.07)"/>
+
+          <!-- body blob -->
+          <path d="M80 18 C114 18 132 42 132 70 C132 104 112 126 80 128 C48 126 28 104 28 70 C28 42 46 18 80 18 Z" fill="var(--ink)"/>
+
+          <!-- left arm -->
+          <path d="M38 82 Q20 100 16 120" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/>
+          <circle cx="15" cy="122" r="7" fill="var(--ink)"/>
+
+          <!-- right arm + pencil -->
+          <g class="arm-right idle">
+            <path d="M122 82 Q138 100 144 118" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/>
+            <circle cx="145" cy="120" r="7" fill="var(--ink)"/>
+            <!-- pencil -->
+            <g transform="translate(147,118) rotate(38)">
+              <rect x="-3.5" y="-26" width="7" height="26" rx="1.5" fill="#f5c518"/>
+              <rect x="-3.5" y="-30" width="7" height="5"  rx="1" fill="#e8e0d0"/>
+              <polygon points="-3.5,0 3.5,0 0,10" fill="#e8956a"/>
+              <circle cx="0" cy="10" r="1.8" fill="#2c1f0e"/>
+            </g>
+          </g>
+
+          <!-- eyes -->
+          <g class="eyelid" transform-origin="63 64">
+            <ellipse cx="63" cy="64" rx="10" ry="11" fill="white"/>
+            <circle cx="64" cy="65" r="6"  fill="var(--ink)"/>
+            <circle cx="66" cy="63" r="2.5" fill="white"/>
+          </g>
+          <g class="eyelid" transform-origin="97 64">
+            <ellipse cx="97" cy="64" rx="10" ry="11" fill="white"/>
+            <circle cx="98" cy="65" r="6"  fill="var(--ink)"/>
+            <circle cx="100" cy="63" r="2.5" fill="white"/>
+          </g>
+
+          <!-- smile -->
+          <path d="M66 88 Q80 100 94 88" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+          <!-- legs -->
+          <path d="M64 126 Q58 155 56 172" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/>
+          <path d="M96 126 Q102 155 104 172" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/>
+          <!-- feet -->
+          <ellipse cx="53"  cy="175" rx="12" ry="7" fill="var(--ink)"/>
+          <ellipse cx="107" cy="175" rx="12" ry="7" fill="var(--ink)"/>
+
+        </g>
+      </svg>
+    </div>
+
+    <!-- ── Headline types in here ── -->
+    <div class="headline" id="headline">
+      <span class="cursor"></span>
+    </div>
+
+    <!-- ── CTA ── -->
+    <a class="cta" id="cta" href="https://github.com/trinathone/paper-clipz" target="_blank">
+      Get Paper Clipz &rarr;
+    </a>
+
+  </div>
+</div>
+
+<script>
+  const headline = document.getElementById('headline');
+  const cta      = document.getElementById('cta');
+  const armRight = document.querySelector('.arm-right');
+
+  const text = [
+    'You found it once.',
+    'Your brain saved it.',
+    'Now so will your browser.'
+  ];
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  async function typeText() {
+    // Wait for character bounce-in to finish
+    await sleep(1300);
+
+    // Switch arm to writing mode
+    armRight.classList.remove('idle');
+    armRight.classList.add('writing');
+
+    let html = '';
+
+    for (let li = 0; li < text.length; li++) {
+      const line = text[li];
+
+      for (let ci = 0; ci < line.length; ci++) {
+        const ch = line[ci];
+        html += ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch;
+        headline.innerHTML = html + (li === text.length - 1 && ci === line.length - 1
+          ? '<span class="cursor"></span>'
+          : '<span class="cursor"></span>');
+
+        // Timing: pause longer at punctuation
+        const delay = ch === '.' || ch === '!' || ch === '?'
+          ? 190
+          : 48 + Math.random() * 32;
+        await sleep(delay);
+      }
+
+      if (li < text.length - 1) {
+        html += '<br>';
+        headline.innerHTML = html + '<span class="cursor"></span>';
+        await sleep(260);
+      }
+    }
+
+    // Stop writing
+    armRight.classList.remove('writing');
+    armRight.classList.add('idle');
+
+    // Blink cursor a moment then remove
+    await sleep(700);
+    headline.querySelector('.cursor')?.remove();
+
+    // Show CTA
+    await sleep(180);
+    cta.classList.add('show');
+  }
+
+  typeText();
+</script>
+</body>
+</html>
