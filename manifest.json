@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Paper Clipz",
+  "version": "1.0",
+  "description": "Save selected text and notes from any page",
+  "permissions": ["storage", "tabs", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Paper Clipz"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
