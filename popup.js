@@ -15,7 +15,7 @@ chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
 // Open URL in new tab
 urlOpen.addEventListener('click', () => {
   const url = urlEl.value.trim();
-  if (url) chrome.tabs.create({ url });
+  if (url && /^https?:\/\//i.test(url)) chrome.tabs.create({ url });
 });
 
 // Save

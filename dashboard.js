@@ -45,6 +45,13 @@ function esc(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function safeUrl(url) {
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? url : '#';
+  } catch { return '#'; }
+}
+
 function getVisible() {
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
   return allClips.filter(c => {
@@ -93,7 +100,7 @@ function renderGrid() {
         <span class="card-domain">${esc(domain(c.url))}</span>
         <span class="card-time">${relativeTime(c.ts)}</span>
       </div>
-      <a class="card-title" href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a>
+      <a class="card-title" href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a>
       ${c.text ? `
         <div class="card-text-wrap">
           <div class="card-text">${esc(c.text)}</div>
