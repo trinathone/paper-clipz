@@ -37,6 +37,15 @@ Click the extension icon → Dashboard → search anything. Filters by domain to
 **Deleting:**
 Hit × on any card. Gone.
 
+**Badge on icon:**
+The extension icon shows how many clips you have saved. Max display is 99+.
+
+**Export clips:**
+Click ↓ Export on the dashboard to download all your clips as a JSON file.
+
+**Keyboard shortcut:**
+Press Cmd+Shift+S (Mac) or Ctrl+Shift+S (Windows/Linux) to instantly save the current page.
+
 ---
 
 ## Tech stack

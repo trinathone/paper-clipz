@@ -5,6 +5,11 @@ const titleEl = document.getElementById('titleInput');
 const urlEl   = document.getElementById('urlInput');
 const textEl  = document.getElementById('textInput');
 
+chrome.storage.local.get({ clips: [] }, ({ clips }) => {
+  const el = document.getElementById('clipCount');
+  if (el) el.textContent = clips.length ? `(${clips.length})` : '';
+});
+
 // Pre-fill current tab
 chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
   if (!tab) return;

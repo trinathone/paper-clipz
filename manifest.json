@@ -1,13 +1,25 @@
 {
   "manifest_version": 3,
   "name": "Paper Clipz",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Save selected text and notes from any page",
   "permissions": ["storage", "tabs", "activeTab", "scripting"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Paper Clipz"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "save-page": {
+      "suggested_key": {
+        "mac": "Command+Shift+S",
+        "default": "Ctrl+Shift+S"
+      },
+      "description": "Save current page to Paper Clipz"
+    }
   },
   "content_scripts": [
     {
