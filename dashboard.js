@@ -3,6 +3,7 @@ let activeDomain = null;
 let fontSize  = localStorage.getItem('pcz-fs')      || '13';
 let theme     = localStorage.getItem('pcz-theme')   || 'light';
 let cardOp    = localStorage.getItem('pcz-card-op') || '100';
+let sortOrder = localStorage.getItem('pcz-sort')    || 'newest';
 
 const sizeMap = { '11': '11px', '13': '13px', '16': '16px' };
 
@@ -54,7 +55,7 @@ function safeUrl(url) {
 
 function getVisible() {
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  return allClips.filter(c => {
+  let clips = allClips.filter(c => {
     const domainMatch = !activeDomain || domain(c.url) === activeDomain;
     const textMatch = !q ||
       c.title.toLowerCase().includes(q) ||
@@ -63,6 +64,8 @@ function getVisible() {
       (c.note && c.note.toLowerCase().includes(q));
     return domainMatch && textMatch;
   });
+  clips = clips.slice().sort((a, b) => sortOrder === 'oldest' ? a.ts - b.ts : b.ts - a.ts);
+  return clips;
 }
 
 function renderFilters() {
@@ -204,6 +207,18 @@ document.querySelectorAll('.sz-btn').forEach(btn => {
     applySize();
   });
 });
+
+// ── Sort ──
+const sortBtn = document.getElementById('sortBtn');
+if (sortBtn) {
+  sortBtn.textContent = sortOrder === 'newest' ? '↓ Newest' : '↑ Oldest';
+  sortBtn.addEventListener('click', () => {
+    sortOrder = sortOrder === 'newest' ? 'oldest' : 'newest';
+    localStorage.setItem('pcz-sort', sortOrder);
+    sortBtn.textContent = sortOrder === 'newest' ? '↓ Newest' : '↑ Oldest';
+    renderGrid();
+  });
+}
 
 // ── Search ──
 document.getElementById('searchInput').addEventListener('input', renderGrid);
