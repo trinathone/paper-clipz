@@ -155,6 +155,40 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
+// ── Import ──
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error('Not an array');
+      const valid = imported.filter(c => c && typeof c === 'object' && c.id);
+      chrome.storage.local.get({ clips: [] }, ({ clips }) => {
+        const existingIds = new Set(clips.map(c => c.id));
+        const merged = [...clips, ...valid.filter(c => !existingIds.has(c.id))];
+        chrome.storage.local.set({ clips: merged }, () => {
+          allClips = merged;
+          render();
+          const btn = document.getElementById('importBtn');
+          const orig = btn.textContent;
+          btn.textContent = `↑ +${valid.length} imported`;
+          setTimeout(() => { btn.textContent = orig; }, 2000);
+        });
+      });
+    } catch {
+      alert('Invalid JSON file — could not import.');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
 // ── Card transparency ──
 document.getElementById('opSlider').addEventListener('input', e => {
   cardOp = e.target.value;
